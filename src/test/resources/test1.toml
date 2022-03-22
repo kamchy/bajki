@@ -1,0 +1,29 @@
+title = "House"
+author = "Little Mom"
+titleImagePath = "house.jpg"
+footer = "Simple Living"
+
+[[pages]]
+number = 1
+imagePath = "house1.jpg"
+text = """
+line1
+line2
+line3
+"""
+
+
+[[pages]]
+number = 2
+imagePath = "house2.jpg"
+text = """
+foo1
+foo2
+"""
+
+[[pages]]
+number = 3
+imagePath = "house3.jpg"
+text = """
+test
+"""

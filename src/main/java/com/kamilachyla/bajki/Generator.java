@@ -11,8 +11,10 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.AreaBreakType;
+import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,9 @@ import java.util.function.Supplier;
  */
 public class Generator {
 
+    public static final DeviceRgb BLUE = new DeviceRgb(35, 206, 235);
+    public static final DeviceRgb YELLOW = new DeviceRgb(255, 218, 185);
+    private static final String BOOK_SERIES_NAME = "Bajeczki dla Eweczki";
     private static Logger logger = LoggerFactory.getLogger("Generator");
     private final Function<String, Path> pathResolver;
 
@@ -89,6 +94,7 @@ public class Generator {
 
     private void generateNextPage(Document doc, BookPage p) {
         logger.info("generateNextPage {}", p.number());
+
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
         doc.add(new Paragraph(
                 new Text(p.text())
@@ -96,7 +102,7 @@ public class Generator {
                         .setFont(myBoldFont))
         );
 
-        SolidLine line = new SolidLine(3f);
+        SolidLine line = new SolidLine(0);
         LineSeparator ls = new LineSeparator(line);
         ls.setWidth(UnitValue.createPercentValue(100));
         ls.setMarginTop(20);
@@ -110,7 +116,37 @@ public class Generator {
             e.printStackTrace();
         }
 
+        addFooter(doc, Optional.of(String.valueOf(p.number())));
     }
+
+    private void addFooter(Document doc, Optional<String> text) {
+        Table table = new Table(text.isPresent() ? 2 : 1);
+        table.setWidth(UnitValue.createPercentValue(100));
+        table.addCell(new Div().add(
+                    new Paragraph(new Text(BOOK_SERIES_NAME)))
+                .setTextAlignment(TextAlignment.CENTER)
+                .setBackgroundColor(BLUE));
+        text.ifPresent(t -> {
+            table.addCell(new Div().add(
+                            new Paragraph(new Text(t))).setTextAlignment(TextAlignment.CENTER)
+                    .setBackgroundColor(YELLOW));
+        });
+        table.setBackgroundColor(BLUE);
+        removeBorders(table);
+        table.setMarginTop(20);
+
+        doc.add(table);
+    }
+
+    private void removeBorders(Table table) {
+        for (int i = 0; i < table.getNumberOfRows(); i++) {
+            for (int j = 0; j < table.getNumberOfColumns(); j++) {
+                table.getCell(i, j).setBorder(Border.NO_BORDER);
+            }
+        }
+    }
+
+
 
     private void createTitlePage(Document doc, Book book) {
         logger.info("Generating title page for {}", book.title());
@@ -132,7 +168,7 @@ public class Generator {
             logger.error(e.getMessage());
             e.printStackTrace();
         }
-
+        addFooter(doc, Optional.empty());
         logger.info("createTitlePage for {} complete.", book.title());
     }
 

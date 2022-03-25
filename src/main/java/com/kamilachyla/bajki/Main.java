@@ -36,7 +36,7 @@ public class Main {
         logger.info("resolved file name: {}", tomlFileName);
         try (var fileReader = new FileReader(tomlFileName)) {
             Optional<Book> meta = new MyTomlParser().parse(fileReader);
-            return new Generator(tomlFilePath::resolveSibling).generate(meta.orElseThrow(), () -> PDF_OUTPUT_NAME);
+            return new Generator(tomlFilePath::resolveSibling).generate(meta.orElseThrow(), PDF_OUTPUT_NAME);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return Optional.empty();

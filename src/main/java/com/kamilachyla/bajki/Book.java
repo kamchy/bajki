@@ -18,6 +18,10 @@ public record Book(String title, String author, String titleImagePath, String fo
                 .toList();
     }
 
+    /**
+     * Generates Book with the same data but with empty list of pages
+     * @return Book with empty list of pages
+     */
     public Book withEmptyPages() {
         return new Book(title, author, titleImagePath, footer, null);
     }

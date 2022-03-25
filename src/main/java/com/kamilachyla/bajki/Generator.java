@@ -25,7 +25,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 
 /**
@@ -42,9 +41,17 @@ public class Generator {
     public static final DeviceRgb BLUE = new DeviceRgb(35, 206, 235);
     public static final DeviceRgb YELLOW = new DeviceRgb(255, 218, 185);
     private static final String BOOK_SERIES_NAME = "Bajeczki dla Eweczki";
+    public static final int TITLE_FONT_SIZE = 24;
+    public static final int AUTHOR_FONT_SIZE = 18;
+    public static final int LINE_MARGIN_TOP = 10;
+    public static final int LINE_MARGIN_BOTTOM = 10;
+    public static final int FOOTER_MARGIN_TOP = 10;
+    public static final int TITLE_MARGIN_BOTTOM = 50;
+    final int PAGE_FONT_SIZE = 18;
+    public static final PageSize PAGE_SIZE = PageSize.A5;
+
     private static Logger logger = LoggerFactory.getLogger("Generator");
     private final Function<String, Path> pathResolver;
-
     /** FontData keeps font alisa and .ttf file path for use with @{link {@link FontProgramFactory#registerFont(String, String)}}*/
     static record FontData(String alias, String path){}
     private static PdfFont myBoldFont = registerFont(new FontData("chamfont", "src/main/resources/ChamsBold.ttf"));
@@ -71,16 +78,14 @@ public class Generator {
     /**
      * Generates a .pdf file  from @{link Meta} meta parameter. Name of result file is provided by @{param outputFileNameSupplier}
      * @param  book data to render in a form of pdf
-     * @param outputFileNameSupplier supplies name of output .pdf file
-     * */
-    public  Optional<Path> generate(Book book, Supplier<String> outputFileNameSupplier) throws FileNotFoundException {
+     * @param outputFileName  name of output .pdf file */
+    public  Optional<Path> generate(Book book, String outputFileName) throws FileNotFoundException {
         logger.info("Generate {}", book.title());
-        final var filename = pathResolver.apply(outputFileNameSupplier.get())
+        final var filename = pathResolver.apply(outputFileName)
                 .toAbsolutePath().normalize().toString();
         var writer = new PdfWriter(filename);
         var pdf = new PdfDocument(writer);
-        PageSize pageSize = PageSize.A4;
-        Document doc = new Document(pdf, pageSize);
+        Document doc = new Document(pdf, PAGE_SIZE);
         
         createTitlePage(doc, book);
         for (BookPage p : book.pages()) {
@@ -96,17 +101,18 @@ public class Generator {
         logger.info("generateNextPage {}", p.number());
 
         doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+
         doc.add(new Paragraph(
                 new Text(p.text())
-                        .setFontSize(24)
+                        .setFontSize(PAGE_FONT_SIZE)
                         .setFont(myBoldFont))
         );
 
         SolidLine line = new SolidLine(0);
         LineSeparator ls = new LineSeparator(line);
         ls.setWidth(UnitValue.createPercentValue(100));
-        ls.setMarginTop(20);
-        ls.setMarginBottom(20);
+        ls.setMarginTop(LINE_MARGIN_TOP);
+        ls.setMarginBottom(LINE_MARGIN_BOTTOM);
 
         doc.add(ls);
 
@@ -133,7 +139,7 @@ public class Generator {
         });
         table.setBackgroundColor(BLUE);
         removeBorders(table);
-        table.setMarginTop(20);
+        table.setMarginTop(FOOTER_MARGIN_TOP);
 
         doc.add(table);
     }
@@ -152,14 +158,14 @@ public class Generator {
         logger.info("Generating title page for {}", book.title());
         doc.add(new Paragraph(
                 new Text(book.author())
-                        .setFontSize(24)
+                        .setFontSize(AUTHOR_FONT_SIZE)
                         .setFont(myBoldFont)));
 
 
         doc.add(new Paragraph(book.title())
-                .setFontSize(42).setFont(myBoldFont)
+                .setFontSize(TITLE_FONT_SIZE).setFont(myBoldFont)
                 .setFontColor(new DeviceRgb(30, 50, 200))
-                .setMarginBottom(50));
+                .setMarginBottom(TITLE_MARGIN_BOTTOM));
 
 
         try {
@@ -175,7 +181,7 @@ public class Generator {
     private Image getImage(Document doc, String imagePath) throws MalformedURLException {
         final var filename = pathResolver.apply(imagePath).normalize().toString();
         logger.info("Resolved path for {}: {}", imagePath, filename);
-        final var width = doc.getPageEffectiveArea(PageSize.A4).getWidth();
+        final var width = doc.getPageEffectiveArea(PAGE_SIZE).getWidth();
         return new Image(ImageDataFactory.create(filename)).setWidth(width);
     }
 }
